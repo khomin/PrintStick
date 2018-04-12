@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!DOCTYPE db SYSTEM "hibernate-configuration-3.0.dtd">
 <db>
-    <name>postgres</name>
-    <host>localhost</host>
+    <name>test_lls_06.04</name>
+    <host>31.10.4.158</host>
     <passwd>1qaz@WSX3edc$RFV</passwd>
     <port>5432</port>
 </db>
