@@ -10,9 +10,22 @@ import org.w3c.dom.Text;
 
 import javax.script.Bindings;
 import java.awt.*;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
 import java.util.ArrayList;
 
-public class db {
+public class Db {
+
+    private static Db instance;
+
+    public static synchronized Db getInstance() {
+        if (instance == null) {
+            instance = new Db();
+        }
+        return instance;
+    }
+
     @FXML
     javafx.scene.control.TextField text_field_name;
     @FXML
@@ -26,48 +39,56 @@ public class db {
     @FXML
     javafx.scene.control.Button button_exit;
     //
-    String name;
-    String host;
-    String passwd;
+    StringProperty name = new SimpleStringProperty();
+    StringProperty host = new SimpleStringProperty();
+    StringProperty port = new SimpleStringProperty();
+    StringProperty passwd = new SimpleStringProperty();
+
     XmlSettings settings;
     String xml = "./db_settings.xml";
+    Connection db_connection = null;
 
-    public void initialize() {
+    public Db() {
         //-- settings
         settings = new XmlSettings();
         ArrayList<String>data_settings = settings.readXML_dataBase(xml);
         if(!data_settings.isEmpty()) {
-            name = data_settings.get(0);
-            host = data_settings.get(1);
-            passwd = data_settings.get(2);
-            port = data_settings.get(3);
+            name.set(data_settings.get(0));
+            host.set(data_settings.get(1));
+            passwd.set(data_settings.get(2));
+            port.set(data_settings.get(3));
         } else {
             settings.saveToXML_dataBase("postgres","localhost","5432","1qaz@WSX3edc$RFV",xml);
         }
-        //
+        try {
+            db_connection = DriverManager.getConnection("jdbc:postgresql://"
+                    + host.get() +":" + port.get() + "/" + name.get(),"postgres", passwd.get());
+            System.out.println("Opened database successfully");
+        } catch (SQLException ex) {
+            System.err.print(ex);
+        }
+    }
+
+    public void initialize() {
+        //-- form
         button_accept.disableProperty().bind(
                 text_field_name.textProperty().isEmpty()
                         .or(text_field_host.textProperty().isEmpty())
                         .or(text_field_port.textProperty().isEmpty())
                         .or(text_field_passwd.textProperty().isEmpty())
         );
-        StringProperty name_property = new SimpleStringProperty(name);
-        StringProperty host_property = new SimpleStringProperty(host);
-        StringProperty port_property = new SimpleStringProperty(port);
-        StringProperty passwd_property = new SimpleStringProperty(passwd);
-        text_field_name.textProperty().bindBidirectional(name_property);
-        text_field_port.textProperty().bindBidirectional(port_property);
-        text_field_host.textProperty().bindBidirectional(host_property);
-        text_field_passwd.textProperty().bindBidirectional(passwd_property);
+        text_field_name.textProperty().bindBidirectional(name);
+        text_field_port.textProperty().bindBidirectional(port);
+        text_field_host.textProperty().bindBidirectional(host);
+        text_field_passwd.textProperty().bindBidirectional(passwd);
     }
     public void onExit() {
         Stage stage;
         stage = (Stage)button_accept.getScene().getWindow();
         stage.close();
     }
-    String port;
     public void onAccept() {
-        settings.saveToXML_dataBase(name, host,port,passwd, xml);
+        settings.saveToXML_dataBase(name.get(), host.get(), port.get(), passwd.get(), xml);
         Stage stage;
         stage = (Stage)button_accept.getScene().getWindow();
         stage.close();

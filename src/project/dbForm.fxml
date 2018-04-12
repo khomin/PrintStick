@@ -8,7 +8,7 @@
 <?import javafx.scene.layout.GridPane?>
 <?import javafx.scene.layout.RowConstraints?>
 
-<AnchorPane prefHeight="200.0" prefWidth="238.0" xmlns="http://javafx.com/javafx/8.0.121" xmlns:fx="http://javafx.com/fxml/1" fx:controller="project.db">
+<AnchorPane prefHeight="200.0" prefWidth="238.0" xmlns="http://javafx.com/javafx/8.0.121" xmlns:fx="http://javafx.com/fxml/1" fx:controller="project.Db">
    <children>
       <GridPane layoutX="15.0" layoutY="14.0" prefHeight="120.0" prefWidth="207.0">
         <columnConstraints>
@@ -22,14 +22,14 @@
             <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
         </rowConstraints>
          <children>
-            <Label text="Имя" />
             <TextField fx:id="text_field_name" GridPane.columnIndex="1" />
+            <TextField fx:id="text_field_host" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+            <TextField fx:id="text_field_port" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+            <TextField fx:id="text_field_passwd" GridPane.columnIndex="1" GridPane.rowIndex="3" />
+            <Label text="Имя" />
             <Label text="Хост" GridPane.rowIndex="1" />
             <Label text="Порт" GridPane.rowIndex="2" />
             <Label text="Пароль" GridPane.rowIndex="3" />
-            <TextField fx:id="text_field_passwd" GridPane.columnIndex="1" GridPane.rowIndex="3" />
-            <TextField fx:id="text_field_port" GridPane.columnIndex="1" GridPane.rowIndex="2" />
-            <TextField fx:id="text_field_host" GridPane.columnIndex="1" GridPane.rowIndex="1" />
          </children>
       </GridPane>
       <Button fx:id="button_accept" layoutX="124.0" layoutY="145.0" mnemonicParsing="false" onAction="#onAccept" prefHeight="41.0" prefWidth="100.0" text="Изменить" />

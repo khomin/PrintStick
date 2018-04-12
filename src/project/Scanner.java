@@ -1,6 +1,5 @@
 package project;
 
-import gnu.io.*;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.beans.property.SimpleStringProperty;
@@ -11,12 +10,13 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.stage.Stage;
+import jssc.*;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.*;
 import java.net.PortUnreachableException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.EnumSet;
 import java.util.Enumeration;
 
@@ -27,9 +27,11 @@ public class Scanner {
     public Button button_accept;
     @FXML
     public Button button_exit;
-
-    SerialPort com_port;
+    public SerialPort com_port;
     private String com_port_name = "";
+    private InputStream in_stream;
+    private OutputStream out_stream;
+    public StickMaker stickMaker = new StickMaker();
     final private String port_scanner_man = "text_man";
     //
     XmlSettings settings;
@@ -41,130 +43,76 @@ public class Scanner {
         settings = new XmlSettings();
         com_port_name = settings.readXML_tty(xml);
         if(com_port_name.isEmpty()) {
-           settings.saveToXML_tty("COM1",xml);
+            settings.saveToXML_tty("COM1",xml);
             com_port_name = "COM1";
         }
-        Enumeration portEnum = CommPortIdentifier.getPortIdentifiers();
-        ArrayList<CommPortIdentifier> comPort = new ArrayList<>();
-        ArrayList<String> comPortNames = new ArrayList<>();
-        while(portEnum.hasMoreElements()) {
-            comPort.add((CommPortIdentifier)portEnum.nextElement());
-        }
-        for(int i=0; i<comPort.size(); i++) {
-            comPortNames.add(comPort.get(i).getName());
+        String [] portNames = SerialPortList.getPortNames();
+        for(int i = 0; i < portNames.length; i++){
+            System.out.println(portNames[i]);
         }
         try {
-            comPortList.setItems(FXCollections.observableArrayList(comPortNames));
+            comPortList.setItems(FXCollections.observableArrayList(portNames));
             if(!com_port_name.isEmpty()) {
                 comPortList.setValue(com_port_name);
             } else {
-                comPortList.setValue(comPortNames.get(0).toString());
+                comPortList.setValue(portNames[0].toString());
             }
             connect(com_port_name);
-        } catch (Exception ex){
+        } catch (Exception ex) {
+            Alert alert = new Alert(Alert.AlertType.INFORMATION);
+            alert.setTitle("Ошибка");
+            alert.setHeaderText(null);
+            alert.setContentText("Ошибка открытия порта " + com_port_name + "\nВыберите другой порт!");
+            alert.showAndWait();
             System.err.print(ex);
         }
     }
 
-    void connect ( String portName ) throws Exception
-    {
-        CommPortIdentifier portIdentifier = CommPortIdentifier.getPortIdentifier(portName);
-        if ( portIdentifier.isCurrentlyOwned() )
-        {
-            System.out.println("Error: Port is currently in use");
-        }
-        else
-        {
-            CommPort commPort = portIdentifier.open(com_port_name,2000);
-
-            if ( commPort instanceof SerialPort )
-            {
-                SerialPort serialPort = (SerialPort) commPort;
-                serialPort.setSerialPortParams(115200,SerialPort.DATABITS_8,SerialPort.STOPBITS_1,SerialPort.PARITY_NONE);
-
-                InputStream in = serialPort.getInputStream();
-                OutputStream out = serialPort.getOutputStream();
-
-                (new Thread(new SerialReader(in))).start();
-                (new Thread(new SerialWriter(out))).start();
-
-            }
-            else
-            {
-                System.out.println("Error: Only serial ports are handled by this example.");
-            }
+    public void  disconnect() {
+        try {
+            com_port.closePort();
+        } catch (SerialPortException ex) {
+            System.err.print(ex);
         }
     }
 
-//    public boolean openScannerPort() throws Exception {
-//        boolean res = false;
-//        try {
-//            if(com_port_name.isEmpty()) { //-- если в настройках нет порта
-//                com_port_name = comPortList.getSelectionModel().getSelectedItem().toString();
-//            }
-//            if(com_port_name.length() != 0) {
-////                CommPortIdentifier portId = CommPortIdentifier.getPortIdentifier(com_port_name);
-////                SerialPort com_port = (SerialPort) portId.open(com_port_name, 1000);
-////                com_port.setSerialPortParams(115200, SerialPort.DATABITS_8, SerialPort.STOPBITS_1, SerialPort.PARITY_NONE);
-////                InputStream in_stream = com_port.getInputStream();
-////                OutputStream out_stream = com_port.getOutputStream();
-////                (new Thread(new SerialReader(in_stream))).start();
-////                (new Thread(new SerialWriter(out_stream))).start();
-//            }
-//            Stage stage = (Stage) comPortList.getScene().getWindow();
-//            stage.hide();
-//        } catch (PortInUseException ex) {
-//            System.err.print(ex.getMessage());
-//            Alert alert = new Alert(Alert.AlertType.ERROR);
-//            alert.setTitle("Ошибка");
-//            alert.setContentText("Ошибка открытия порта");
-//            alert.show();
-//        }
-//        return res;
-//    }
-
-    /** */
-    public static class SerialReader implements Runnable {
-        InputStream in;
-        public SerialReader ( InputStream in ) {
-            this.in = in;
-        }
-        public void run () {
-            byte[] buffer = new byte[1024];
-            int len = -1;
-            try {
-                while ( ( len = this.in.read(buffer)) > -1 ) {
-                    System.out.print(new String(buffer,0,len));
-                }
+    public boolean connect(String port) throws Exception {
+        boolean res = false;
+        try {
+            if(com_port_name.isEmpty()) { //-- если в настройках нет порта
+                com_port_name = comPortList.getSelectionModel().getSelectedItem().toString();
             }
-            catch ( IOException e ) {
-                e.printStackTrace();
+            com_port = new SerialPort(com_port_name);
+            if(com_port_name.length() != 0) {
+                res = com_port.openPort();
+                com_port.setParams(SerialPort.BAUDRATE_115200,
+                        SerialPort.DATABITS_8,
+                        SerialPort.STOPBITS_1,
+                        SerialPort.PARITY_NONE);
             }
+        } catch (SerialPortException ex) {
+            System.err.print(ex.getMessage());
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setTitle("Ошибка");
+            alert.setContentText("Ошибка открытия порта");
+            alert.show();
         }
+        return res;
     }
-    /** */
-    public static class SerialWriter implements Runnable {
-        OutputStream out;
-        public SerialWriter ( OutputStream out ) {
-            this.out = out;
-        }
-        public void run () {
-            try {
-                int c = 0;
-                while ( ( c = System.in.read()) > -1 )
-                {
-                    this.out.write(c);
-                }
-            }
-            catch(IOException e ) {
-                e.printStackTrace();
-            }
+
+    public void startScanner() {
+        int mask = SerialPort.MASK_RXCHAR;
+        try {
+            com_port.addEventListener(new SerialPortReader(com_port, stickMaker));
+        } catch(SerialPortException ex ) {
+            System.err.print(ex.getMessage());
         }
     }
 
     @FXML
     public void onAccept() {
         Stage stage;
+        settings.saveToXML_tty(comPortList.getSelectionModel().getSelectedItem().toString(), xml);
         stage = (Stage)button_accept.getScene().getWindow();
         stage.close();
     }
@@ -173,5 +121,30 @@ public class Scanner {
         Stage stage;
         stage = (Stage)button_accept.getScene().getWindow();
         stage.close();
+    }
+
+    static class SerialPortReader implements SerialPortEventListener {
+        StickMaker stickMaker = null;
+        SerialPort com_threa_port;
+        public SerialPortReader(SerialPort port, StickMaker instickMaker) {
+            com_threa_port = port;
+            stickMaker = instickMaker;
+        }
+
+        public void serialEvent(SerialPortEvent event) {
+            byte [] buffer = {0};
+            String qr_code = "";
+            try {
+                buffer = com_threa_port.readBytes();
+                qr_code = new String(buffer, "UTF-8");
+                System.out.print(qr_code);
+                stickMaker.getStickBoxed(qr_code);
+            }
+            catch (SerialPortException ex) {
+                System.out.println(ex);
+            } catch (UnsupportedEncodingException e) {
+                e.printStackTrace();
+            }
+        }
     }
 }

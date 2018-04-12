@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<!DOCTYPE db SYSTEM "hibernate-configuration-3.0.dtd">
+<!DOCTYPE tty SYSTEM "hibernate-configuration-3.0.dtd">
 <tty>
-	<tty_name>COM14</tty_name>
+    <tty_name>COM14</tty_name>
 </tty>

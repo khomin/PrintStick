@@ -49,27 +49,11 @@ public class XmlSettings {
             e.appendChild(dom.createTextNode(tty_name));
             rootEle.appendChild(e);
             dom.appendChild(rootEle);
-
-            try {
-                Transformer tr = TransformerFactory.newInstance().newTransformer();
-                tr.setOutputProperty(OutputKeys.INDENT, "yes");
-                tr.setOutputProperty(OutputKeys.METHOD, "xml");
-                tr.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
-                tr.setOutputProperty(OutputKeys.DOCTYPE_SYSTEM, "hibernate-configuration-3.0.dtd");
-                tr.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "4");
-                // send DOM to file
-                tr.transform(new DOMSource(dom),
-                        new StreamResult(new FileOutputStream(xml)));
-            } catch (TransformerException te) {
-                System.out.println(te.getMessage());
-            } catch (IOException ioe) {
-                System.out.println(ioe.getMessage());
-            }
+            createDocumentXml(dom, xml);
         } catch (ParserConfigurationException pce) {
             System.out.println("UsersXML: Error trying to instantiate DocumentBuilder " + pce);
         }
     }
-
     // db
     public ArrayList<String> readXML_dataBase(String xml) {
         ArrayList<String> rolev;
@@ -145,26 +129,28 @@ public class XmlSettings {
             rootEle.appendChild(e);
 
             dom.appendChild(rootEle);
+            createDocumentXml(dom, xml);
 
-            try {
-                Transformer tr = TransformerFactory.newInstance().newTransformer();
-                tr.setOutputProperty(OutputKeys.INDENT, "yes");
-                tr.setOutputProperty(OutputKeys.METHOD, "xml");
-                tr.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
-                tr.setOutputProperty(OutputKeys.DOCTYPE_SYSTEM, "hibernate-configuration-3.0.dtd");
-                tr.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "4");
-
-                // send DOM to file
-                tr.transform(new DOMSource(dom),
-                        new StreamResult(new FileOutputStream(xml)));
-
-            } catch (TransformerException te) {
-                System.out.println(te.getMessage());
-            } catch (IOException ioe) {
-                System.out.println(ioe.getMessage());
-            }
         } catch (ParserConfigurationException pce) {
             System.out.println("UsersXML: Error trying to instantiate DocumentBuilder " + pce);
+        }
+    }
+
+    private void createDocumentXml(Document dom, String xml) {
+        try {
+            Transformer tr = TransformerFactory.newInstance().newTransformer();
+            tr.setOutputProperty(OutputKeys.INDENT, "yes");
+            tr.setOutputProperty(OutputKeys.METHOD, "xml");
+            tr.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
+            tr.setOutputProperty(OutputKeys.DOCTYPE_SYSTEM, "hibernate-configuration-3.0.dtd");
+            tr.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "4");
+            // send DOM to file
+            tr.transform(new DOMSource(dom),
+                    new StreamResult(new FileOutputStream(xml)));
+        } catch (TransformerException te) {
+            System.out.println(te.getMessage());
+        } catch (IOException ioe) {
+            System.out.println(ioe.getMessage());
         }
     }
 
