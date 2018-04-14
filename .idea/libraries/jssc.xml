@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="jssc">
+    <CLASSES>
+      <root url="jar://F:/Program Files/Java/jdk-10/lib/jssc.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

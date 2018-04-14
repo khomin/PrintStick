@@ -2,6 +2,8 @@ package project;
 
 import javafx.application.Application;
 import javafx.application.Platform;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.collections.FXCollections;
@@ -9,6 +11,7 @@ import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
+import javafx.stage.Modality;
 import javafx.stage.Stage;
 import jssc.*;
 
@@ -32,6 +35,7 @@ public class Scanner {
     private InputStream in_stream;
     private OutputStream out_stream;
     public StickMaker stickMaker = new StickMaker();
+    public BooleanProperty auto_print_mode = new SimpleBooleanProperty(true);
     final private String port_scanner_man = "text_man";
     //
     XmlSettings settings;
@@ -92,7 +96,9 @@ public class Scanner {
             }
         } catch (SerialPortException ex) {
             System.err.print(ex.getMessage());
+            Stage stage = (Stage)button_accept.getScene().getWindow();
             Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.initModality(Modality.APPLICATION_MODAL);
             alert.setTitle("Ошибка");
             alert.setContentText("Ошибка открытия порта");
             alert.show();
@@ -103,7 +109,7 @@ public class Scanner {
     public void startScanner() {
         int mask = SerialPort.MASK_RXCHAR;
         try {
-            com_port.addEventListener(new SerialPortReader(com_port, stickMaker));
+            com_port.addEventListener(new SerialPortReader(com_port, stickMaker, auto_print_mode));
         } catch(SerialPortException ex ) {
             System.err.print(ex.getMessage());
         }
@@ -126,11 +132,13 @@ public class Scanner {
     static class SerialPortReader implements SerialPortEventListener {
         StickMaker stickMaker = null;
         SerialPort com_threa_port;
-        public SerialPortReader(SerialPort port, StickMaker instickMaker) {
+        BooleanProperty auto_print_mode;
+        public SerialPortReader(SerialPort port, StickMaker instickMaker,
+                                BooleanProperty auto_print_mode) {
             com_threa_port = port;
             stickMaker = instickMaker;
+            this.auto_print_mode = auto_print_mode;
         }
-
         public void serialEvent(SerialPortEvent event) {
             byte [] buffer = {0};
             String qr_code = "";
@@ -138,7 +146,7 @@ public class Scanner {
                 buffer = com_threa_port.readBytes();
                 qr_code = new String(buffer, "UTF-8");
                 System.out.print(qr_code);
-                stickMaker.getStickBoxed(qr_code);
+                stickMaker.getStickBoxed(qr_code, auto_print_mode.get());
             }
             catch (SerialPortException ex) {
                 System.out.println(ex);
